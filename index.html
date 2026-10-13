@@ -3,7 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f5f7fa" />
+    <meta name="theme-color" content="#f4f6f8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f141a" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
     <meta
       name="description"
       content="一个清爽、顺手、可自定义的网址导航。"
@@ -13,14 +15,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
     <script src="app.js" defer></script>
   </head>
   <body>
-    <main class="page-shell">
+    <main class="page-shell" id="top">
       <section class="hero" aria-label="时间与搜索">
         <div class="hero-art" aria-hidden="true"></div>
         <a class="brand" href="#" aria-label="渔网首页">
@@ -38,9 +40,10 @@
           <div class="date-line">
             <span id="date">10月13日 星期二</span>
             <span class="date-separator" aria-hidden="true"></span>
-            <span class="weather">
+            <span class="location">
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M7.3 18.2h10a4.2 4.2 0 0 0 .2-8.4 6 6 0 0 0-11.6 1.7 3.4 3.4 0 0 0 1.4 6.7Z" />
+                <path d="M12 21.1s6.7-5.6 6.7-10.8a6.7 6.7 0 1 0-13.4 0C5.3 15.5 12 21.1 12 21.1Z" />
+                <circle cx="12" cy="10.1" r="2.5" />
               </svg>
               成都
             </span>
@@ -81,7 +84,7 @@
             <input
               id="search-input"
               type="search"
-              placeholder="搜索网站或输入关键词（按空格键聚焦）"
+              placeholder="输入关键词，按回车键搜索"
               autocomplete="off"
               aria-label="搜索关键词"
             />
@@ -97,6 +100,16 @@
       </section>
 
       <section class="favorites-section" aria-labelledby="favorites-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">YOUR EVERYDAY SHORTCUTS</p>
+            <h1 id="favorites-title">常用快捷方式</h1>
+          </div>
+          <p class="section-note">
+            <span class="live-dot" aria-hidden="true"></span>
+            拖拽卡片可调整顺序
+          </p>
+        </div>
         <div class="favorites-rail" id="favorites-rail" aria-label="常用网站"></div>
       </section>
 
@@ -133,15 +146,15 @@
         </div>
         <label class="form-field">
           <span>网站名称</span>
-          <input name="name" required maxlength="24" placeholder="例如：我的工作台" />
+          <input name="name" required maxlength="24" placeholder="例如：我的工作台" aria-describedby="form-error" />
         </label>
         <label class="form-field">
           <span>网址链接</span>
-          <input name="url" type="url" required placeholder="https://example.com" />
+          <input name="url" type="url" required placeholder="https://example.com" aria-describedby="form-error" />
         </label>
         <label class="form-field">
           <span>放入分类</span>
-          <select name="category" id="category-select" required></select>
+          <select name="category" id="category-select" required aria-describedby="form-error"></select>
         </label>
         <p class="form-error" id="form-error" role="alert" hidden>请输入有效的网址链接。</p>
         <button class="submit-link" type="submit">保存到导航 <span aria-hidden="true">↗</span></button>
@@ -159,7 +172,7 @@
         </div>
         <label class="form-field">
           <span>分类名称</span>
-          <input name="name" required maxlength="16" placeholder="例如：设计灵感" />
+          <input name="name" required maxlength="16" placeholder="例如：设计灵感" aria-describedby="category-form-error" />
         </label>
         <p class="form-error" id="category-form-error" role="alert" hidden>请填写分类名称。</p>
         <button class="submit-link" type="submit">创建分类 <span aria-hidden="true">↗</span></button>
@@ -177,11 +190,11 @@
         </div>
         <label class="form-field">
           <span>显示名称</span>
-          <input name="name" required maxlength="24" />
+          <input name="name" required maxlength="24" aria-describedby="favorite-form-error" />
         </label>
         <label class="form-field">
           <span>网站网址</span>
-          <input name="url" type="url" required />
+          <input name="url" type="url" required aria-describedby="favorite-form-error" />
         </label>
         <p class="form-error" id="favorite-form-error" role="alert" hidden>请输入有效的网址链接。</p>
         <button class="submit-link" type="submit">保存快捷方式 <span aria-hidden="true">↗</span></button>
@@ -199,7 +212,7 @@
         </div>
         <label class="form-field">
           <span>选择目标分类</span>
-          <select name="category" id="move-favorite-category" required></select>
+          <select name="category" id="move-favorite-category" required aria-describedby="move-favorite-error"></select>
         </label>
         <p class="form-error" id="move-favorite-error" role="alert" hidden>移动失败，请重试。</p>
         <button class="submit-link" type="submit">移动网址 <span aria-hidden="true">↗</span></button>

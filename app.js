@@ -276,19 +276,13 @@ function createSiteIcon(site, className) {
     logo.alt = "";
     logo.loading = "lazy";
     logo.referrerPolicy = "no-referrer";
+    logo.draggable = false;
     const parsedUrl = new URL(url);
-    const isYouTube = parsedUrl.hostname === "youtube.com" || parsedUrl.hostname.endsWith(".youtube.com");
-    const directIconSources = [
+    const iconSources = [
       new URL("/favicon.ico", url).href,
-      new URL("/favicon.png", url).href,
-      new URL("/favicon.svg", url).href,
-      new URL("/apple-touch-icon.png", url).href,
       `https://icons.duckduckgo.com/ip3/${parsedUrl.hostname}.ico`,
       `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(url)}&sz=64`,
     ];
-    const iconSources = isYouTube
-      ? [directIconSources[0], new URL("youtube-icon.svg", document.baseURI).href, ...directIconSources.slice(1)]
-      : directIconSources;
     let sourceIndex = 0;
     const loadNextIcon = () => {
       if (sourceIndex >= iconSources.length) {
@@ -316,8 +310,15 @@ function renderFavorites() {
       card.getBoundingClientRect(),
     ]),
   );
+  const items = getFavorites();
   favoritesRail.replaceChildren();
-  for (const site of getFavorites()) {
+  if (!items.length) {
+    const empty = document.createElement("p");
+    empty.className = "favorites-empty";
+    empty.textContent = "还没有快捷方式，点击右侧「＋」把常用网址放上来。";
+    favoritesRail.append(empty);
+  }
+  for (const site of items) {
     const card = document.createElement("div");
     card.className = "favorite-card";
     card.draggable = true;
@@ -329,6 +330,7 @@ function renderFavorites() {
     link.target = "_blank";
     link.rel = "noopener noreferrer";
     link.setAttribute("aria-label", `打开 ${site.name}`);
+    link.draggable = false;
     link.append(createSiteIcon(site, "favorite-icon"));
 
     const label = document.createElement("span");
@@ -338,12 +340,12 @@ function renderFavorites() {
     card.append(link, createFavoriteMenu(site));
     favoritesRail.append(card);
   }
-  if (getFavorites().length < 12) {
+  if (items.length < 12) {
     const addCard = document.createElement("button");
     addCard.className = "favorite-add-card";
     addCard.type = "button";
     addCard.setAttribute("aria-label", "添加快捷网址");
-    addCard.style.order = String(getFavorites().length);
+    addCard.style.order = String(items.length);
     addCard.innerHTML = '<span aria-hidden="true">＋</span>';
     addCard.addEventListener("click", openAddFavorite);
     favoritesRail.append(addCard);
@@ -671,8 +673,47 @@ function reorderFavorite(draggedId, targetId) {
   if (saveFavoriteSettings(settings)) renderFavorites();
 }
 
+let siteRenderCount = 0;
+
+function animateSitePositions(previousPositions) {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  for (const card of categoryList.querySelectorAll(".site-card")) {
+    const previous = previousPositions.get(card.dataset.siteId);
+    if (!previous) {
+      card.animate(
+        [
+          { opacity: 0, transform: "scale(0.94)" },
+          { opacity: 1, transform: "scale(1)" },
+        ],
+        { duration: 260, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" },
+      );
+      continue;
+    }
+    const current = card.getBoundingClientRect();
+    const deltaX = previous.left - current.left;
+    const deltaY = previous.top - current.top;
+    if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) continue;
+    card.animate(
+      [
+        { transform: `translate(${deltaX}px, ${deltaY}px)` },
+        { transform: "translate(0, 0)" },
+      ],
+      { duration: 340, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" },
+    );
+  }
+}
+
 function renderCategories() {
   const categories = getCategories();
+  const previousPositions = siteRenderCount
+    ? new Map(
+        [...categoryList.querySelectorAll(".site-card")].map((card) => [
+          card.dataset.siteId,
+          card.getBoundingClientRect(),
+        ]),
+      )
+    : null;
+  siteRenderCount += 1;
   categoryList.replaceChildren();
   for (const category of categories) {
     const row = document.createElement("section");
@@ -686,6 +727,7 @@ function renderCategories() {
 
     const links = document.createElement("div");
     links.className = "category-links";
+    links.dataset.categoryId = category.id;
     for (const site of category.sites) {
       const url = safeExternalUrl(site.url);
       if (!url) continue;
@@ -701,6 +743,7 @@ function renderCategories() {
       link.href = url;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
+      link.draggable = false;
       link.append(createSiteIcon(site, "site-icon"));
 
       const copy = document.createElement("span");
@@ -716,6 +759,12 @@ function renderCategories() {
       card.append(link, createSiteMenu(site, category.id));
       links.append(card);
     }
+    if (!links.childElementCount) {
+      const empty = document.createElement("p");
+      empty.className = "category-empty";
+      empty.textContent = "这个分类还是空的，点右下角「添加网址」放一个进来。";
+      links.append(empty);
+    }
     row.append(links);
     categoryList.append(row);
   }
@@ -723,6 +772,7 @@ function renderCategories() {
     categories.reduce((total, category) => total + category.sites.length, 0),
   );
   renderCategoryOptions(categories);
+  if (previousPositions) animateSitePositions(previousPositions);
 }
 
 function createSiteMenu(site, categoryId) {
@@ -1245,14 +1295,20 @@ favoritesRail.addEventListener("dragstart", (event) => {
   draggedFavoriteId = card.dataset.favoriteId;
   draggedCategoryId = null;
   favoritePreviewOrder = getFavorites().map((site) => site.id);
-  favoriteStartPositions = new Map(
-    [...favoritesRail.querySelectorAll(".favorite-card")].map((item, index) => [
-      item.dataset.favoriteId,
-      { index, left: item.getBoundingClientRect().left },
-    ]),
-  );
-  favoriteSlotPositions = [...favoriteStartPositions.values()].map((position) => position.left);
+  favoriteStartPositions = new Map();
+  favoriteSlotPositions = [];
+  // 记录拖拽开始时每张卡片的物理槽位；整个拖拽过程只依据这份固定几何求目标位置，
+  // 不做命中测试，避免卡片滑动时光标下的元素变化导致左右横跳。
+  // 坐标统一换算到栏杆的内容坐标系，这样拖拽途中栏杆自动横向滚动也不会失准。
+  const origin = favoriteContentOrigin();
+  [...favoritesRail.querySelectorAll(".favorite-card")].forEach((item, index) => {
+    const rect = item.getBoundingClientRect();
+    const left = rect.left - origin;
+    favoriteStartPositions.set(item.dataset.favoriteId, { index, left });
+    favoriteSlotPositions.push({ left, center: left + rect.width / 2 });
+  });
   favoriteDropCommitted = false;
+  favoritesRail.classList.add("is-dragging");
   const dragImage = card.cloneNode(true);
   dragImage.classList.add("favorite-drag-image");
   document.body.append(dragImage);
@@ -1268,9 +1324,9 @@ favoritesRail.addEventListener("dragend", (event) => {
   if (!favoriteDropCommitted) {
     for (const card of favoritesRail.querySelectorAll(".favorite-card")) {
       card.style.transform = "";
-      card.classList.remove("is-drop-target");
     }
   }
+  favoritesRail.classList.remove("is-dragging");
   draggedFavoriteId = null;
   favoritePreviewOrder = null;
   favoriteStartPositions = null;
@@ -1278,42 +1334,49 @@ favoritesRail.addEventListener("dragend", (event) => {
   favoriteDropCommitted = false;
 });
 
+function favoriteContentOrigin() {
+  return favoritesRail.getBoundingClientRect().left - favoritesRail.scrollLeft;
+}
+
+function applyFavoritePreview() {
+  if (!favoritePreviewOrder || !favoriteStartPositions || !favoriteSlotPositions) return;
+  // 每张卡片（含被拖拽的那张）都移动到自己的预览槽位，保证任何时刻一个槽位只有一张卡片
+  for (const card of favoritesRail.querySelectorAll(".favorite-card")) {
+    const start = favoriteStartPositions.get(card.dataset.favoriteId);
+    const index = favoritePreviewOrder.indexOf(card.dataset.favoriteId);
+    const slot = favoriteSlotPositions[index];
+    if (!start || index < 0 || !slot) continue;
+    card.style.transform = `translateX(${slot.left - start.left}px)`;
+  }
+}
+
+function updateFavoriteDragPreview(clientX) {
+  const slots = favoriteSlotPositions;
+  if (!slots || !slots.length || !favoritePreviewOrder || !draggedFavoriteId) return;
+  const cursor = clientX - favoriteContentOrigin();
+  let gapIndex = 0;
+  while (gapIndex < slots.length && cursor > slots[gapIndex].center) gapIndex += 1;
+  gapIndex = Math.min(gapIndex, slots.length - 1);
+  const currentIndex = favoritePreviewOrder.indexOf(draggedFavoriteId);
+  if (currentIndex < 0 || currentIndex === gapIndex) return;
+  const [movedId] = favoritePreviewOrder.splice(currentIndex, 1);
+  favoritePreviewOrder.splice(gapIndex, 0, movedId);
+  applyFavoritePreview();
+}
+
 favoritesRail.addEventListener("dragover", (event) => {
-  const target = event.target.closest(".favorite-card");
-  if (!target || !draggedFavoriteId || target.dataset.favoriteId === draggedFavoriteId) return;
+  if (!draggedFavoriteId || !favoritePreviewOrder) return;
   event.preventDefault();
   event.dataTransfer.dropEffect = "move";
-  const targetRect = target.getBoundingClientRect();
-  const draggedIndex = favoritePreviewOrder.indexOf(draggedFavoriteId);
-  const targetIndex = favoritePreviewOrder.indexOf(target.dataset.favoriteId);
-  const insertAfter = event.clientX > targetRect.left + targetRect.width / 2;
-  const nextIndex = targetIndex + (insertAfter ? 1 : 0);
-  if (draggedIndex < 0 || targetIndex < 0 || draggedIndex === nextIndex || draggedIndex + 1 === nextIndex) {
-    return;
-  }
-
-  const [draggedId] = favoritePreviewOrder.splice(draggedIndex, 1);
-  const adjustedIndex = draggedIndex < nextIndex ? nextIndex - 1 : nextIndex;
-  favoritePreviewOrder.splice(adjustedIndex, 0, draggedId);
-  favoritePreviewOrder.forEach((id, index) => {
-    const card = [...favoritesRail.querySelectorAll(".favorite-card")].find(
-      (item) => item.dataset.favoriteId === id,
-    );
-    const start = favoriteStartPositions.get(id);
-    const targetLeft = favoriteSlotPositions[index];
-    card.style.transform = id === draggedFavoriteId
-      ? ""
-      : `translateX(${targetLeft - start.left}px)`;
-    card.classList.toggle("is-drop-target", id === target.dataset.favoriteId);
-  });
+  updateFavoriteDragPreview(event.clientX);
 });
 
 favoritesRail.addEventListener("drop", (event) => {
-  const target = event.target.closest(".favorite-card");
-  if (!target || !draggedFavoriteId) return;
+  if (!draggedFavoriteId || !favoritePreviewOrder) return;
   event.preventDefault();
+  updateFavoriteDragPreview(event.clientX);
   const settings = readFavoriteSettings();
-  settings.order = favoritePreviewOrder;
+  settings.order = [...favoritePreviewOrder];
   if (!saveFavoriteSettings(settings)) {
     window.alert("排序保存失败，请检查浏览器存储空间或权限。");
     return;
@@ -1330,8 +1393,18 @@ categoryList.addEventListener("dragstart", (event) => {
   const category = getCategories().find((item) => item.id === draggedCategoryId);
   if (!category) return;
   sitePreviewOrder = category.sites.map((site) => site.id);
-  const cards = [...card.parentElement.querySelectorAll(".site-card")];
-  siteSlotPositions = cards.map((item) => item.getBoundingClientRect());
+  const links = card.parentElement;
+  const linksRect = links.getBoundingClientRect();
+  // 槽位记录成相对网格容器的坐标，页面滚动时依然有效
+  siteSlotPositions = [...links.querySelectorAll(".site-card")].map((item) => {
+    const rect = item.getBoundingClientRect();
+    return {
+      left: rect.left - linksRect.left,
+      top: rect.top - linksRect.top,
+      width: rect.width,
+      height: rect.height,
+    };
+  });
   card.classList.add("is-dragging");
   const dragImage = card.cloneNode(true);
   dragImage.classList.add("site-drag-image");
@@ -1349,7 +1422,6 @@ categoryList.addEventListener("dragend", (event) => {
       if (card.dataset.categoryId !== draggedCategoryId) continue;
       card.style.order = "";
       card.style.transform = "";
-      card.classList.remove("is-drop-target");
     }
   }
   draggedSiteId = null;
@@ -1358,21 +1430,45 @@ categoryList.addEventListener("dragend", (event) => {
   siteSlotPositions = null;
 });
 
-function previewSiteDrop(target, event) {
-  if (!target || !draggedSiteId || !sitePreviewOrder || target.dataset.siteId === draggedSiteId) return;
-  if (target.dataset.categoryId !== draggedCategoryId) return;
+function findSiteSlotIndex(x, y) {
+  const slots = siteSlotPositions;
+  if (!slots || !slots.length) return -1;
+  let nearest = -1;
+  let nearestDistance = Infinity;
+  for (let index = 0; index < slots.length; index += 1) {
+    const rect = slots[index];
+    const right = rect.left + rect.width;
+    const bottom = rect.top + rect.height;
+    if (x >= rect.left && x <= right && y >= rect.top && y <= bottom) return index;
+    const dx = Math.max(rect.left - x, 0, x - right);
+    const dy = Math.max(rect.top - y, 0, y - bottom);
+    const distance = dx * dx + dy * dy;
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
+      nearest = index;
+    }
+  }
+  return nearest;
+}
+
+function updateSiteDragPreview(links, clientX, clientY) {
+  if (!links || !draggedSiteId || !sitePreviewOrder || !siteSlotPositions) return;
+  const linksRect = links.getBoundingClientRect();
+  const x = clientX - linksRect.left;
+  const y = clientY - linksRect.top;
+  const hoveredIndex = findSiteSlotIndex(x, y);
+  if (hoveredIndex < 0) return;
   const draggedIndex = sitePreviewOrder.indexOf(draggedSiteId);
-  const targetIndex = sitePreviewOrder.indexOf(target.dataset.siteId);
-  if (draggedIndex < 0 || targetIndex < 0) return;
-  const links = target.parentElement;
-  const columnCount = getComputedStyle(links).gridTemplateColumns.split(" ").length;
-  const sameRow = Math.floor(targetIndex / columnCount) === Math.floor(draggedIndex / columnCount);
-  const targetRect = siteSlotPositions[targetIndex];
-  const insertAfter = sameRow
-    ? event.clientX >= targetRect.left + targetRect.width / 2
-    : event.clientY >= targetRect.top + targetRect.height / 2;
-  const nextIndex = targetIndex + (insertAfter ? 1 : 0);
-  if (draggedIndex === nextIndex || draggedIndex + 1 === nextIndex) return;
+  if (draggedIndex < 0) return;
+
+  // 目标位置只由固定槽位几何决定：重排后光标下的元素会变，靠命中测试取参考卡片必然来回抖
+  const rect = siteSlotPositions[hoveredIndex];
+  const insertAfter = x >= rect.left + rect.width / 2;
+  const insertIndex = Math.min(
+    Math.max(hoveredIndex + (insertAfter ? 1 : 0), 0),
+    sitePreviewOrder.length - 1,
+  );
+  if (insertIndex === draggedIndex) return;
 
   const cards = [...links.querySelectorAll(".site-card")];
   const previousPositions = new Map(
@@ -1383,9 +1479,8 @@ function previewSiteDrop(target, event) {
     card.style.transform = "";
   }
   void links.offsetWidth;
-  const [draggedId] = sitePreviewOrder.splice(draggedIndex, 1);
-  const adjustedIndex = draggedIndex < nextIndex ? nextIndex - 1 : nextIndex;
-  sitePreviewOrder.splice(adjustedIndex, 0, draggedId);
+  const [movedId] = sitePreviewOrder.splice(draggedIndex, 1);
+  sitePreviewOrder.splice(insertIndex, 0, movedId);
   sitePreviewOrder.forEach((id, index) => {
     const card = cards.find((item) => item.dataset.siteId === id);
     if (card) card.style.order = String(index);
@@ -1399,7 +1494,6 @@ function previewSiteDrop(target, event) {
     if (previous && next) {
       card.style.transform = `translate(${previous.left - next.left}px, ${previous.top - next.top}px)`;
     }
-    card.classList.toggle("is-drop-target", card.dataset.siteId === target.dataset.siteId);
   }
   void links.offsetWidth;
   for (const card of cards) {
@@ -1409,19 +1503,20 @@ function previewSiteDrop(target, event) {
 }
 
 categoryList.addEventListener("dragover", (event) => {
-  const target = event.target.closest(".site-card");
-  if (!target || !draggedSiteId || target.dataset.categoryId !== draggedCategoryId) return;
+  if (!draggedSiteId || !sitePreviewOrder) return;
+  const links = event.target.closest(".category-links");
+  if (!links || links.dataset.categoryId !== draggedCategoryId) return;
   event.preventDefault();
   event.dataTransfer.dropEffect = "move";
-  previewSiteDrop(target, event);
+  updateSiteDragPreview(links, event.clientX, event.clientY);
 });
 
 categoryList.addEventListener("drop", (event) => {
-  const target = event.target.closest(".site-card");
-  if (!target || !draggedSiteId) return;
+  if (!draggedSiteId || !sitePreviewOrder) return;
+  const links = event.target.closest(".category-links");
+  if (!links || links.dataset.categoryId !== draggedCategoryId) return;
   event.preventDefault();
-  if (target.dataset.categoryId !== draggedCategoryId) return;
-  previewSiteDrop(target, event);
+  updateSiteDragPreview(links, event.clientX, event.clientY);
   const settings = readSiteSettings();
   settings.orders[draggedCategoryId] = [...sitePreviewOrder];
   if (!saveSiteSettings(settings)) {
@@ -1440,4 +1535,6 @@ renderFavorites();
 renderCategories();
 updateEngineSymbol();
 updateClock();
-window.setInterval(updateClock, 1000);
+window.setInterval(() => {
+  if (!document.hidden) updateClock();
+}, 1000);
