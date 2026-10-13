@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f5f7fa" />
+    <meta
+      name="description"
+      content="一个清爽、顺手、可自定义的网址导航。"
+    />
+    <title>渔网网址导航</title>
+    <link rel="icon" type="image/svg+xml" href="fishnet-icon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="hero" aria-label="时间与搜索">
+        <div class="hero-art" aria-hidden="true"></div>
+        <a class="brand" href="#" aria-label="渔网首页">
+          <svg class="brand-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <path d="M5 7c6-5 16-5 22 0M5 7c2 9 6 17 11 22 5-5 9-13 11-22" />
+            <path d="m7 12 18 5M9 18l14 5M11 24l10-1M11 6l4 22m6-27-1 27m8-20-8 21M6 11l19 13"
+              class="brand-net" />
+            <circle cx="16" cy="29" r="1.5" />
+          </svg>
+          <span>渔网<span class="brand-dot">.</span></span>
+        </a>
+        <div class="hero-content">
+          <p class="eyebrow">A LITTLE SPACE FOR YOUR DAY</p>
+          <time class="clock" id="clock">08:37:51</time>
+          <div class="date-line">
+            <span id="date">10月13日 星期二</span>
+            <span class="date-separator" aria-hidden="true"></span>
+            <span class="weather">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M7.3 18.2h10a4.2 4.2 0 0 0 .2-8.4 6 6 0 0 0-11.6 1.7 3.4 3.4 0 0 0 1.4 6.7Z" />
+              </svg>
+              成都
+            </span>
+          </div>
+          <form class="search-bar" id="search-form" role="search">
+            <div class="engine-control">
+              <button
+                class="engine-trigger"
+                id="engine-trigger"
+                type="button"
+                aria-label="选择搜索引擎"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+                aria-controls="engine-options"
+              >
+                <span class="engine-symbol" id="engine-symbol" aria-hidden="true"></span>
+                <span class="engine-current" id="engine-current">百度</span>
+                <svg class="chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="m4 6 4 4 4-4" />
+                </svg>
+              </button>
+              <select id="search-engine" aria-label="选择搜索引擎" hidden>
+                <option value="baidu">百度</option>
+                <option value="google">谷歌</option>
+              </select>
+              <div class="engine-options" id="engine-options" role="listbox" aria-label="搜索引擎" hidden>
+                <button class="engine-option" type="button" role="option" data-engine="baidu" aria-selected="true">
+                  <span class="engine-symbol engine-symbol-baidu" aria-hidden="true"></span>
+                  <span>百度</span>
+                </button>
+                <button class="engine-option" type="button" role="option" data-engine="google" aria-selected="false">
+                  <span class="engine-symbol engine-symbol-google" aria-hidden="true"></span>
+                  <span>Google</span>
+                </button>
+              </div>
+            </div>
+            <span class="search-divider" aria-hidden="true"></span>
+            <input
+              id="search-input"
+              type="search"
+              placeholder="搜索网站或输入关键词（按空格键聚焦）"
+              autocomplete="off"
+              aria-label="搜索关键词"
+            />
+            <button class="search-submit" type="submit" aria-label="开始搜索">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="10.8" cy="10.8" r="6.8" />
+                <path d="m16 16 4.5 4.5" />
+              </svg>
+            </button>
+          </form>
+        </div>
+        <span class="hero-caption" aria-hidden="true">01 — FIND YOUR WAY</span>
+      </section>
+
+      <section class="favorites-section" aria-labelledby="favorites-title">
+        <div class="favorites-rail" id="favorites-rail" aria-label="常用网站"></div>
+      </section>
+
+      <section class="directory" aria-label="网站分类">
+        <div class="directory-toolbar">
+          <p><span class="live-dot"></span> 精选网址 <span id="site-count">12</span></p>
+        </div>
+        <div id="category-list"></div>
+        <div class="directory-actions">
+          <button class="add-link" id="add-category" type="button">
+            <span aria-hidden="true">＋</span> 添加分类
+          </button>
+          <button class="add-link add-link-primary" id="add-link" type="button">
+            <span aria-hidden="true">＋</span> 添加网址
+          </button>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <span class="footer-brand">渔网<span class="brand-dot">.</span></span>
+        <span>日常所需，恰好在此。</span>
+        <a href="#top" id="back-to-top">回到顶部 ↑</a>
+      </footer>
+    </main>
+
+    <dialog class="add-dialog" id="add-dialog" aria-labelledby="dialog-title">
+      <form id="add-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="section-kicker">MAKE IT YOURS</p>
+            <h2 id="dialog-title">添加一个网址</h2>
+          </div>
+          <button class="dialog-close" type="button" id="close-dialog" aria-label="关闭">×</button>
+        </div>
+        <label class="form-field">
+          <span>网站名称</span>
+          <input name="name" required maxlength="24" placeholder="例如：我的工作台" />
+        </label>
+        <label class="form-field">
+          <span>网址链接</span>
+          <input name="url" type="url" required placeholder="https://example.com" />
+        </label>
+        <label class="form-field">
+          <span>放入分类</span>
+          <select name="category" id="category-select" required></select>
+        </label>
+        <p class="form-error" id="form-error" role="alert" hidden>请输入有效的网址链接。</p>
+        <button class="submit-link" type="submit">保存到导航 <span aria-hidden="true">↗</span></button>
+      </form>
+    </dialog>
+
+    <dialog class="add-dialog" id="category-dialog" aria-labelledby="category-dialog-title">
+      <form id="category-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="section-kicker">ORGANIZE YOUR LINKS</p>
+            <h2 id="category-dialog-title">添加一个分类</h2>
+          </div>
+          <button class="dialog-close" type="button" id="close-category-dialog" aria-label="关闭">×</button>
+        </div>
+        <label class="form-field">
+          <span>分类名称</span>
+          <input name="name" required maxlength="16" placeholder="例如：设计灵感" />
+        </label>
+        <p class="form-error" id="category-form-error" role="alert" hidden>请填写分类名称。</p>
+        <button class="submit-link" type="submit">创建分类 <span aria-hidden="true">↗</span></button>
+      </form>
+    </dialog>
+
+    <dialog class="add-dialog" id="favorite-dialog" aria-labelledby="favorite-dialog-title">
+      <form id="favorite-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="section-kicker">YOUR EVERYDAY SHORTCUTS</p>
+            <h2 id="favorite-dialog-title">修改快捷方式</h2>
+          </div>
+          <button class="dialog-close" type="button" id="close-favorite-dialog" aria-label="关闭">×</button>
+        </div>
+        <label class="form-field">
+          <span>显示名称</span>
+          <input name="name" required maxlength="24" />
+        </label>
+        <label class="form-field">
+          <span>网站网址</span>
+          <input name="url" type="url" required />
+        </label>
+        <p class="form-error" id="favorite-form-error" role="alert" hidden>请输入有效的网址链接。</p>
+        <button class="submit-link" type="submit">保存快捷方式 <span aria-hidden="true">↗</span></button>
+      </form>
+    </dialog>
+
+    <dialog class="add-dialog" id="move-favorite-dialog" aria-labelledby="move-favorite-title">
+      <form id="move-favorite-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="section-kicker">ORGANIZE YOUR LINKS</p>
+            <h2 id="move-favorite-title">移动到精选网址</h2>
+          </div>
+          <button class="dialog-close" type="button" id="close-move-favorite" aria-label="关闭">×</button>
+        </div>
+        <label class="form-field">
+          <span>选择目标分类</span>
+          <select name="category" id="move-favorite-category" required></select>
+        </label>
+        <p class="form-error" id="move-favorite-error" role="alert" hidden>移动失败，请重试。</p>
+        <button class="submit-link" type="submit">移动网址 <span aria-hidden="true">↗</span></button>
+      </form>
+    </dialog>
+  </body>
+</html>
