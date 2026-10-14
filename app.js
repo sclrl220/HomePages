@@ -1,14 +1,14 @@
 const favorites = [
-  { name: "gemini", symbol: "✦", accent: "#a9b6ff", url: "https://gemini.google.com/" },
-  { name: "grok", symbol: "𝕏", accent: "#f3f4f6", url: "https://grok.com/" },
+  { name: "Gemini", symbol: "G", accent: "#4d6bfe", url: "https://gemini.google.com/" },
+  { name: "Grok", symbol: "K", accent: "#1c1c1c", url: "https://grok.com/" },
   { name: "YouTube", symbol: "▶", accent: "#ff3157", url: "https://www.youtube.com/" },
-  { name: "twitter", symbol: "𝕏", accent: "#f5f5f5", url: "https://x.com/" },
-  { name: "instagram", symbol: "◎", accent: "#ff81b4", url: "https://www.instagram.com/" },
-  { name: "pinterest", symbol: "p", accent: "#ff4e6b", url: "https://www.pinterest.com/" },
-  { name: "spotify", symbol: "≋", accent: "#46df8e", url: "https://open.spotify.com/" },
-  { name: "z-library", symbol: "Z", accent: "#f7f5eb", url: "https://z-library.sk/" },
-  { name: "YG", symbol: "✿", accent: "#f9e1ad", url: "https://www.ygfamily.com/" },
-  { name: "Discord", symbol: "◉", accent: "#8ca6ff", url: "https://discord.com/" },
+  { name: "X", symbol: "X", accent: "#111111", url: "https://x.com/" },
+  { name: "Instagram", symbol: "Ig", accent: "#ff81b4", url: "https://www.instagram.com/" },
+  { name: "Pinterest", symbol: "P", accent: "#e60023", url: "https://www.pinterest.com/" },
+  { name: "Spotify", symbol: "S", accent: "#1db954", url: "https://open.spotify.com/" },
+  { name: "Z-Library", symbol: "Z", accent: "#c4b48a", url: "https://z-library.sk/" },
+  { name: "YG", symbol: "Y", accent: "#d4a017", url: "https://www.ygfamily.com/" },
+  { name: "Discord", symbol: "D", accent: "#5865f2", url: "https://discord.com/" },
 ];
 
 const defaultCategories = [
@@ -40,7 +40,7 @@ const defaultCategories = [
 
 const searchEngines = {
   baidu: { label: "百度", symbol: "百", url: "https://www.baidu.com/s?wd=" },
-  google: { label: "Google", symbol: "G", url: "https://www.google.com/search?q=" },
+  google: { label: "谷歌", symbol: "G", url: "https://www.google.com/search?q=" },
 };
 
 const storageKey = "beiyu-directory-custom-sites";
@@ -294,6 +294,10 @@ function createSiteIcon(site, className) {
       sourceIndex += 1;
     };
     logo.addEventListener("load", () => {
+      if (logo.naturalWidth < 16) {
+        loadNextIcon();
+        return;
+      }
       icon.classList.add("has-logo");
     });
     logo.addEventListener("error", loadNextIcon);
@@ -315,7 +319,7 @@ function renderFavorites() {
   if (!items.length) {
     const empty = document.createElement("p");
     empty.className = "favorites-empty";
-    empty.textContent = "还没有快捷方式，点击右侧「＋」把常用网址放上来。";
+    empty.textContent = "还没有快捷方式，点右侧「＋」把每天会打开的网址放上来。";
     favoritesRail.append(empty);
   }
   for (const site of items) {
@@ -388,7 +392,7 @@ function createFavoriteMenu(site) {
 
   for (const [action, label] of [
     ["edit", "修改"],
-    ["move", "移动到精选网址"],
+    ["move", "移到分类收藏"],
     ["remove", "移除"],
   ]) {
     const button = document.createElement("button");
@@ -529,11 +533,11 @@ function moveDirectorySiteToFavorites(site) {
   const favoriteSettings = readFavoriteSettings();
   const previousFavoriteSettings = readFavoriteSettings();
   if (getFavorites().length >= 12) {
-    window.alert("常用栏最多支持 12 个网址，请先移除一个快捷方式。");
+    window.alert("快捷方式最多 12 个，请先移除一个再添加。");
     return;
   }
   if (getFavorites().some((favorite) => favorite.id === site.id || favorite.url === site.url)) {
-    window.alert("这个网址已经在常用栏中了。");
+    window.alert("这个网址已经在快捷方式里了。");
     return;
   }
 
@@ -635,7 +639,7 @@ function openEditFavorite(site) {
 }
 
 function removeFavorite(site) {
-  if (!window.confirm(`确定从常用快捷方式中移除「${site.name}」吗？`)) return;
+  if (!window.confirm(`确定从快捷方式中移除「${site.name}」吗？`)) return;
   const settings = readFavoriteSettings();
   if (settings.custom.some((item) => item.id === site.id)) {
     settings.custom = settings.custom.filter((item) => item.id !== site.id);
@@ -655,7 +659,7 @@ function openAddFavorite() {
   favoriteFormError.hidden = true;
   document.querySelector("#favorite-dialog-title").textContent = "添加快捷方式";
   document.querySelector("#favorite-form .submit-link").innerHTML =
-    '添加到常用 <span aria-hidden="true">↗</span>';
+    '添加到快捷方式 <span aria-hidden="true">↗</span>';
   favoriteDialog.showModal();
   favoriteForm.elements.name.focus();
 }
@@ -720,10 +724,18 @@ function renderCategories() {
     row.className = "category-row";
     row.setAttribute("aria-label", `${category.name}分类`);
 
-    const heading = document.createElement("h2");
+    const head = document.createElement("div");
+    head.className = "category-head";
+    const heading = document.createElement("h3");
     heading.className = "category-label";
     heading.textContent = category.name;
-    row.append(heading);
+    const addButton = document.createElement("button");
+    addButton.className = "category-add";
+    addButton.type = "button";
+    addButton.textContent = "添加网址";
+    addButton.addEventListener("click", () => openAddLink(category.id));
+    head.append(heading, addButton);
+    row.append(head);
 
     const links = document.createElement("div");
     links.className = "category-links";
@@ -751,10 +763,8 @@ function renderCategories() {
       const name = document.createElement("span");
       name.className = "site-name";
       name.textContent = site.name;
-      const description = document.createElement("span");
-      description.className = "site-description";
-      description.textContent = site.description;
-      copy.append(name, description);
+      copy.append(name);
+      if (site.description) link.title = site.description;
       link.append(copy);
       card.append(link, createSiteMenu(site, category.id));
       links.append(card);
@@ -762,7 +772,7 @@ function renderCategories() {
     if (!links.childElementCount) {
       const empty = document.createElement("p");
       empty.className = "category-empty";
-      empty.textContent = "这个分类还是空的，点右下角「添加网址」放一个进来。";
+      empty.textContent = "这个分类还是空的，点右侧「添加网址」放一个进来。";
       links.append(empty);
     }
     row.append(links);
@@ -791,7 +801,7 @@ function createSiteMenu(site, categoryId) {
 
   const actions = [
     ["edit", "修改"],
-    ["favorite", "移动到常用"],
+    ["favorite", "移到快捷方式"],
     ["delete", "删除"],
   ];
   for (const [action, label] of actions) {
@@ -983,15 +993,15 @@ function openEngineOptions() {
   const margin = 12;
   engineOptions.hidden = false;
   engineOptions.style.position = "fixed";
-  engineOptions.style.width = `min(520px, calc(100vw - ${margin * 2}px))`;
+  engineOptions.style.width = `min(188px, calc(100vw - ${margin * 2}px))`;
   engineOptions.style.zIndex = "10000";
   document.body.append(engineOptions);
   const menu = engineOptions.getBoundingClientRect();
   const left = Math.max(margin, Math.min(anchor.left, innerWidth - menu.width - margin));
-  const below = engineTrigger.getBoundingClientRect().bottom + 18;
+  const below = engineTrigger.getBoundingClientRect().bottom + 8;
   const top = below + menu.height <= innerHeight - margin
     ? below
-    : Math.max(margin, anchor.top - menu.height - 18);
+    : Math.max(margin, anchor.top - menu.height - 8);
   engineOptions.style.left = `${left}px`;
   engineOptions.style.top = `${top}px`;
   engineTrigger.setAttribute("aria-expanded", "true");
@@ -1083,13 +1093,16 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-document.querySelector("#add-link").addEventListener("click", () => {
+function openAddLink(categoryId) {
   renderCategoryOptions(getCategories());
   formError.hidden = true;
   addForm.reset();
+  if (categoryId && [...categorySelect.options].some((option) => option.value === categoryId)) {
+    categorySelect.value = categoryId;
+  }
   addDialog.showModal();
   addForm.elements.name.focus();
-});
+}
 
 document.querySelector("#add-category").addEventListener("click", () => {
   categoryFormError.hidden = true;
@@ -1101,7 +1114,7 @@ document.querySelector("#add-category").addEventListener("click", () => {
 document.querySelector("#close-dialog").addEventListener("click", () => addDialog.close());
 addDialog.addEventListener("close", () => {
   editingSiteId = null;
-  document.querySelector("#dialog-title").textContent = "添加一个网址";
+  document.querySelector("#dialog-title").textContent = "添加网址";
   document.querySelector("#add-form .submit-link").innerHTML = '保存到导航 <span aria-hidden="true">↗</span>';
 });
 document.querySelector("#close-category-dialog").addEventListener("click", () => categoryDialog.close());
@@ -1168,7 +1181,7 @@ favoriteForm.addEventListener("submit", (event) => {
     settings.deleted = settings.deleted.filter((id) => id !== editingFavoriteId);
   } else {
     if (getFavorites().length >= 12) {
-      favoriteFormError.textContent = "常用栏最多添加 12 个快捷网址。";
+      favoriteFormError.textContent = "快捷方式最多 12 个。";
       favoriteFormError.hidden = false;
       return;
     }

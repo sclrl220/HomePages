@@ -23,31 +23,22 @@
   </head>
   <body>
     <main class="page-shell" id="top">
-      <section class="hero" aria-label="时间与搜索">
+      <h1 class="visually-hidden">渔网网址导航</h1>
+      <section class="hero" aria-label="搜索">
         <div class="hero-art" aria-hidden="true"></div>
-        <a class="brand" href="#" aria-label="渔网首页">
-          <svg class="brand-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <path d="M5 7c6-5 16-5 22 0M5 7c2 9 6 17 11 22 5-5 9-13 11-22" />
-            <path d="m7 12 18 5M9 18l14 5M11 24l10-1M11 6l4 22m6-27-1 27m8-20-8 21M6 11l19 13"
-              class="brand-net" />
-            <circle cx="16" cy="29" r="1.5" />
+        <a class="brand" href="#top" aria-label="渔网首页">
+          <svg class="brand-mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <path
+              d="M9 13h30M11 13l4 22 9 7 9-7 4-22M16 13l2 22m5-22v27m5-27-2 22m-5-17-8 6m10-6 10 6m-10 2-8 7m8-7 8 7"
+              class="brand-net"
+            />
+            <path d="M9 13c2-4 5-6 9-6m21 6c-2-4-5-6-9-6" />
           </svg>
           <span>渔网<span class="brand-dot">.</span></span>
         </a>
         <div class="hero-content">
-          <p class="eyebrow">A LITTLE SPACE FOR YOUR DAY</p>
           <time class="clock" id="clock">08:37:51</time>
-          <div class="date-line">
-            <span id="date">10月13日 星期二</span>
-            <span class="date-separator" aria-hidden="true"></span>
-            <span class="location">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M12 21.1s6.7-5.6 6.7-10.8a6.7 6.7 0 1 0-13.4 0C5.3 15.5 12 21.1 12 21.1Z" />
-                <circle cx="12" cy="10.1" r="2.5" />
-              </svg>
-              成都
-            </span>
-          </div>
+          <p class="date-line" id="date">10月13日 星期二</p>
           <form class="search-bar" id="search-form" role="search">
             <div class="engine-control">
               <button
@@ -76,7 +67,7 @@
                 </button>
                 <button class="engine-option" type="button" role="option" data-engine="google" aria-selected="false">
                   <span class="engine-symbol engine-symbol-google" aria-hidden="true"></span>
-                  <span>Google</span>
+                  <span>谷歌</span>
                 </button>
               </div>
             </div>
@@ -84,7 +75,7 @@
             <input
               id="search-input"
               type="search"
-              placeholder="输入关键词，按回车键搜索"
+              placeholder="搜索网页，或按 / 聚焦"
               autocomplete="off"
               aria-label="搜索关键词"
             />
@@ -96,36 +87,24 @@
             </button>
           </form>
         </div>
-        <span class="hero-caption" aria-hidden="true">01 — FIND YOUR WAY</span>
       </section>
 
       <section class="favorites-section" aria-labelledby="favorites-title">
         <div class="section-heading">
-          <div>
-            <p class="section-kicker">YOUR EVERYDAY SHORTCUTS</p>
-            <h1 id="favorites-title">常用快捷方式</h1>
-          </div>
-          <p class="section-note">
-            <span class="live-dot" aria-hidden="true"></span>
-            拖拽卡片可调整顺序
-          </p>
+          <h2 id="favorites-title">快捷方式</h2>
+          <p class="section-note">每天会点的入口，拖拽可排序</p>
         </div>
-        <div class="favorites-rail" id="favorites-rail" aria-label="常用网站"></div>
+        <div class="favorites-rail" id="favorites-rail" aria-label="快捷方式"></div>
       </section>
 
-      <section class="directory" aria-label="网站分类">
+      <section class="directory" aria-labelledby="directory-title">
         <div class="directory-toolbar">
-          <p><span class="live-dot"></span> 精选网址 <span id="site-count">12</span></p>
-        </div>
-        <div id="category-list"></div>
-        <div class="directory-actions">
+          <h2 id="directory-title">分类收藏 <span id="site-count">12</span></h2>
           <button class="add-link" id="add-category" type="button">
             <span aria-hidden="true">＋</span> 添加分类
           </button>
-          <button class="add-link add-link-primary" id="add-link" type="button">
-            <span aria-hidden="true">＋</span> 添加网址
-          </button>
         </div>
+        <div id="category-list"></div>
       </section>
 
       <footer class="footer">
@@ -138,11 +117,10 @@
     <dialog class="add-dialog" id="add-dialog" aria-labelledby="dialog-title">
       <form id="add-form">
         <div class="dialog-heading">
-          <div>
-            <p class="section-kicker">MAKE IT YOURS</p>
-            <h2 id="dialog-title">添加一个网址</h2>
-          </div>
-          <button class="dialog-close" type="button" id="close-dialog" aria-label="关闭">×</button>
+          <h2 id="dialog-title">添加网址</h2>
+          <button class="dialog-close" type="button" id="close-dialog" aria-label="关闭">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+          </button>
         </div>
         <label class="form-field">
           <span>网站名称</span>
@@ -164,11 +142,10 @@
     <dialog class="add-dialog" id="category-dialog" aria-labelledby="category-dialog-title">
       <form id="category-form">
         <div class="dialog-heading">
-          <div>
-            <p class="section-kicker">ORGANIZE YOUR LINKS</p>
-            <h2 id="category-dialog-title">添加一个分类</h2>
-          </div>
-          <button class="dialog-close" type="button" id="close-category-dialog" aria-label="关闭">×</button>
+          <h2 id="category-dialog-title">添加分类</h2>
+          <button class="dialog-close" type="button" id="close-category-dialog" aria-label="关闭">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+          </button>
         </div>
         <label class="form-field">
           <span>分类名称</span>
@@ -182,11 +159,10 @@
     <dialog class="add-dialog" id="favorite-dialog" aria-labelledby="favorite-dialog-title">
       <form id="favorite-form">
         <div class="dialog-heading">
-          <div>
-            <p class="section-kicker">YOUR EVERYDAY SHORTCUTS</p>
-            <h2 id="favorite-dialog-title">修改快捷方式</h2>
-          </div>
-          <button class="dialog-close" type="button" id="close-favorite-dialog" aria-label="关闭">×</button>
+          <h2 id="favorite-dialog-title">修改快捷方式</h2>
+          <button class="dialog-close" type="button" id="close-favorite-dialog" aria-label="关闭">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+          </button>
         </div>
         <label class="form-field">
           <span>显示名称</span>
@@ -204,11 +180,10 @@
     <dialog class="add-dialog" id="move-favorite-dialog" aria-labelledby="move-favorite-title">
       <form id="move-favorite-form">
         <div class="dialog-heading">
-          <div>
-            <p class="section-kicker">ORGANIZE YOUR LINKS</p>
-            <h2 id="move-favorite-title">移动到精选网址</h2>
-          </div>
-          <button class="dialog-close" type="button" id="close-move-favorite" aria-label="关闭">×</button>
+          <h2 id="move-favorite-title">移到分类收藏</h2>
+          <button class="dialog-close" type="button" id="close-move-favorite" aria-label="关闭">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+          </button>
         </div>
         <label class="form-field">
           <span>选择目标分类</span>
